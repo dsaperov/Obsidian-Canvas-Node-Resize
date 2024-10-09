@@ -1,6 +1,8 @@
 import { ItemView, Plugin } from 'obsidian';
 
-function resizeNode(node: any, resizeType: 'tb' | 'lr') {
+const SMALL_NODE_SIZE = 17;
+
+function resizeNode(node: any, resizeType: 'tb' | 'lr', size: number) {
 	const i = node.child;
 	const textLength = !!i.text.length;
 	const previewEl = i.previewMode.renderer.previewEl;
@@ -16,8 +18,8 @@ function resizeNode(node: any, resizeType: 'tb' | 'lr') {
 			if (Math.abs(distance) < .5)
 				break;
 			node.resize({
-				width: textLength ? node.width : 40,
-				height: textLength ? (node.height + distance) : 40
+				width: textLength ? node.width : size,
+				height: textLength ? (node.height + distance) : size
 			});
 			node.render();
 			node.canvas.requestSave();
@@ -47,7 +49,7 @@ function resizeNode(node: any, resizeType: 'tb' | 'lr') {
 			}
 		}
 
-		node.resize({width: textLength ? max : 40, height: textLength ? node.height : 40});
+		node.resize({width: textLength ? max : size, height: textLength ? node.height : size});
 
 		if (previewEl.scrollHeight > scrollHeightForPreview) {
 			node.resize({width: initialWidth, height: node.height});
@@ -64,8 +66,8 @@ export default class NodeResizePlugin extends Plugin {
 
 	async onload() {
 		this.addCommand({
-			id: 'canvas-node-resize',
-			name: 'Canvas node resize',
+			id: 'canvas-node-resize-small',
+			name: 'Canvas node resize (small)',
 			checkCallback: (checking: boolean) => {
 				// Conditions to check
 				const canvasView = this.app.workspace.getActiveViewOfType(ItemView);
@@ -80,8 +82,8 @@ export default class NodeResizePlugin extends Plugin {
 
 						if (nodes && nodes.length === 0) return;
 						nodes.forEach((i) => {
-							resizeNode(i, 'tb');
-							resizeNode(i, 'lr');
+							resizeNode(i, 'tb', SMALL_NODE_SIZE);
+							resizeNode(i, 'lr', SMALL_NODE_SIZE);
 						});
 					}
 
