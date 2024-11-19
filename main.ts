@@ -1,6 +1,7 @@
 import { ItemView, Plugin } from 'obsidian';
 
 const SMALL_NODE_SIZE = 17;
+const EXTRA_SMALL_NODE_SIZE = 3;
 
 function resizeNode(node: any, resizeType: 'tb' | 'lr', size: number) {
 	const i = node.child;
@@ -84,6 +85,33 @@ export default class NodeResizePlugin extends Plugin {
 						nodes.forEach((i) => {
 							resizeNode(i, 'tb', SMALL_NODE_SIZE);
 							resizeNode(i, 'lr', SMALL_NODE_SIZE);
+						});
+					}
+
+					// This command will only show up in Command Palette when the check function returns true
+					return true;
+				}
+			}
+		});
+        this.addCommand({
+			id: 'canvas-node-resize-extra-small',
+			name: 'Canvas node resize (extra-small)',
+			checkCallback: (checking: boolean) => {
+				// Conditions to check
+				const canvasView = this.app.workspace.getActiveViewOfType(ItemView);
+				const viewType = canvasView?.getViewType();
+				const canvas = (canvasView as any).canvas;
+				if (canvas) {
+					// If checking is true, we're simply "checking" if the command can be run.
+					// If checking is false, then we want to actually perform the operation.
+					if (!checking) {
+						const selection: Set<any> = canvas.selection;
+						const nodes = Array.from(selection.values());
+
+						if (nodes && nodes.length === 0) return;
+						nodes.forEach((i) => {
+							resizeNode(i, 'tb', EXTRA_SMALL_NODE_SIZE);
+							resizeNode(i, 'lr', EXTRA_SMALL_NODE_SIZE);
 						});
 					}
 
