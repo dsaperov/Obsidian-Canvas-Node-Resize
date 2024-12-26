@@ -66,118 +66,46 @@ function resizeNode(node: any, resizeType: 'tb' | 'lr', size: number) {
 
 export default class NodeResizePlugin extends Plugin {
 
+    private reduceWidthAction = (node: any) => {
+        node.resize({width: node.width - 1, height: node.height});
+        node.render();
+		node.canvas.requestSave();
+    };
+
+    private addCanvasNodeResizeCommand(id: string, name: string, nodeSize: number, resizeAction?: (node: any) => void) {
+        const defaultResizeAction = (node: any) => {
+            resizeNode(node, 'tb', nodeSize);
+            resizeNode(node, 'lr', nodeSize);
+        };
+
+        this.addCommand({id, name, checkCallback: (checking: boolean) => {
+            const canvasView = this.app.workspace.getActiveViewOfType(ItemView);
+            const viewType = canvasView?.getViewType();
+            const canvas = (canvasView as any)?.canvas;
+                if (canvas) {
+                    // If checking is true, we're simply "checking" if the command can be run.
+				    // If checking is false, then we want to actually perform the operation.
+                    if (!checking) {
+                        const selection: Set<any> = canvas.selection;
+						const nodes = Array.from(selection.values());
+
+                        if (nodes && nodes.length === 0) return;
+						nodes.forEach((node) => (resizeAction ?? defaultResizeAction)(node));
+                    }
+
+                    // This command will only show up in Command Palette when the check function returns true
+                    return true;
+                }
+            }
+        });
+    }
+
 	async onload() {
-        this.addCommand({
-			id: 'canvas-node-resize-medium',
-			name: 'Canvas node resize (medium)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const canvasView = this.app.workspace.getActiveViewOfType(ItemView);
-				const viewType = canvasView?.getViewType();
-				const canvas = (canvasView as any).canvas;
-				if (canvas) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						const selection: Set<any> = canvas.selection;
-						const nodes = Array.from(selection.values());
-
-						if (nodes && nodes.length === 0) return;
-						nodes.forEach((i) => {
-							resizeNode(i, 'tb', MEDIUM_NODE_SIZE);
-							resizeNode(i, 'lr', MEDIUM_NODE_SIZE);
-						});
-					}
-
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
-				}
-			}
-		});
-		this.addCommand({
-			id: 'canvas-node-resize-small',
-			name: 'Canvas node resize (small)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const canvasView = this.app.workspace.getActiveViewOfType(ItemView);
-				const viewType = canvasView?.getViewType();
-				const canvas = (canvasView as any).canvas;
-				if (canvas) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						const selection: Set<any> = canvas.selection;
-						const nodes = Array.from(selection.values());
-
-						if (nodes && nodes.length === 0) return;
-						nodes.forEach((i) => {
-							resizeNode(i, 'tb', SMALL_NODE_SIZE);
-							resizeNode(i, 'lr', SMALL_NODE_SIZE);
-						});
-					}
-
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
-				}
-			}
-		});
-        this.addCommand({
-			id: 'canvas-node-resize-extra-small',
-			name: 'Canvas node resize (extra-small)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const canvasView = this.app.workspace.getActiveViewOfType(ItemView);
-				const viewType = canvasView?.getViewType();
-				const canvas = (canvasView as any).canvas;
-				if (canvas) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						const selection: Set<any> = canvas.selection;
-						const nodes = Array.from(selection.values());
-
-						if (nodes && nodes.length === 0) return;
-						nodes.forEach((i) => {
-							resizeNode(i, 'tb', EXTRA_SMALL_NODE_SIZE);
-							resizeNode(i, 'lr', EXTRA_SMALL_NODE_SIZE);
-						});
-					}
-
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
-				}
-			}
-		});
-        this.addCommand({
-			id: 'canvas-node-resize-reduce-width',
-			name: 'Canvas node resize (reduce width)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const canvasView = this.app.workspace.getActiveViewOfType(ItemView);
-				const viewType = canvasView?.getViewType();
-				const canvas = (canvasView as any).canvas;
-				if (canvas) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						const selection: Set<any> = canvas.selection;
-						const nodes = Array.from(selection.values());
-
-						if (nodes && nodes.length === 0) return;
-						nodes.forEach((node) => {
-                            node.resize({width: node.width - 1, height: node.height});
-						});
-					}
-
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
-				}
-			}
-		});
+        this.addCanvasNodeResizeCommand('canvas-node-resize-medium', 'Canvas node resize (medium)',  MEDIUM_NODE_SIZE);
+        this.addCanvasNodeResizeCommand('canvas-node-resize-small', 'Canvas node resize (small)', SMALL_NODE_SIZE);
+        this.addCanvasNodeResizeCommand('canvas-node-resize-extra-small', 'Canvas node resize (extra-small)', EXTRA_SMALL_NODE_SIZE);
+        this.addCanvasNodeResizeCommand('canvas-node-resize-reduce-width', 'Canvas node resize (reduce width)', 0, this.reduceWidthAction);
 	}
 
-	onunload() {
-
-	}
-
+	onunload() {}
 }
