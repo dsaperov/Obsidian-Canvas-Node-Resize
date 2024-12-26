@@ -148,6 +148,32 @@ export default class NodeResizePlugin extends Plugin {
 				}
 			}
 		});
+        this.addCommand({
+			id: 'canvas-node-resize-reduce-width',
+			name: 'Canvas node resize (reduce width)',
+			checkCallback: (checking: boolean) => {
+				// Conditions to check
+				const canvasView = this.app.workspace.getActiveViewOfType(ItemView);
+				const viewType = canvasView?.getViewType();
+				const canvas = (canvasView as any).canvas;
+				if (canvas) {
+					// If checking is true, we're simply "checking" if the command can be run.
+					// If checking is false, then we want to actually perform the operation.
+					if (!checking) {
+						const selection: Set<any> = canvas.selection;
+						const nodes = Array.from(selection.values());
+
+						if (nodes && nodes.length === 0) return;
+						nodes.forEach((node) => {
+                            node.resize({width: node.width - 1, height: node.height});
+						});
+					}
+
+					// This command will only show up in Command Palette when the check function returns true
+					return true;
+				}
+			}
+		});
 	}
 
 	onunload() {
